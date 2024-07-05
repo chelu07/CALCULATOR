@@ -72,16 +72,24 @@ const calculate = () => {
       result = 0;
     } else {
       try {
+     
         operation = operation
-          .replace("%", "/100")
-          .replace("x", "*")
-          .replace("÷", "/");
+          .replace(/%/g, "/100")
+          .replace(/x/g, "*")
+          .replace(/÷/g, "/");
+
         result = eval(operation);
+
+     
+        if (result === undefined || result === Infinity || result === -Infinity) {
+          result = "Error";
+        }
       } catch (error) {
         result = "Error";
       }
     }
 
+  
     screen.value = result;
   }
 };
