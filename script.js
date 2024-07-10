@@ -1,6 +1,8 @@
 let isOn = false;
 let memory = 0;
 const MAX_CHARACTERS = 11;
+let isError = false; 
+const operators = ["+", "-", "*", "/", "x", "÷"];
 
 const turnOn = () => {
   isOn = true;
@@ -10,8 +12,10 @@ const turnOn = () => {
 
 const turnOff = () => {
   isOn = false;
-  document.getElementById("screen").disabled = true;
-  clearScreen();
+  const screen = document.getElementById("screen");
+  screen.disabled = true;
+  screen.value = ""; 
+  memory = 0; 
 };
 
 const addToScreen = (character) => {
@@ -19,18 +23,37 @@ const addToScreen = (character) => {
     let screen = document.getElementById("screen");
     let currentValue = screen.value;
 
-    if (character === "." && currentValue.includes(".")) {
-      return;
+    if (currentValue === "Error") {
+      screen.value = "";
     }
 
-    const operators = ["+", "-", "*", "/", "x", "÷"];
-    if (
-      operators.includes(character) &&
-      operators.includes(currentValue.slice(-1))
-    ) {
-      return;
+  
+
+    // Decimales
+    if (character === ".") {
+      let parts = currentValue.split(/[\+\-\*\/x÷]/);
+      let lastPart = parts.pop();
+
+      if (lastPart.includes(".")) {
+        return;
+      }
     }
 
+// Operadores
+if (operators.includes(character)) {
+  let lastChar = currentValue.slice(-1);
+
+  if (operators.includes(lastChar)) {
+    // Reemplaza el último operador si es un operador nuevo
+    screen.value = currentValue.slice(0, -1) + character;
+  } else if (currentValue.length > 0) {
+    // Añade el operador si el último carácter no es un operador
+    screen.value += character;
+  }
+  return;
+}
+
+  
     if (currentValue.length < MAX_CHARACTERS) {
       screen.value += character;
     }
@@ -58,7 +81,15 @@ const memoryClear = () => {
 
 const memoryRecall = () => {
   if (isOn) {
-    document.getElementById("screen").value = memory;
+    let screen = document.getElementById("screen");
+    let currentValue = screen.value;
+
+    if (currentValue === "" || currentValue === "Error") {
+      screen.value = memory;
+    } else {
+      // Si ya hay un valor en pantalla, añade el valor de memoria al final
+      screen.value += memory;
+    }
   }
 };
 
@@ -72,7 +103,7 @@ const calculate = () => {
       result = 0;
     } else {
       try {
-     
+      
         operation = operation
           .replace(/%/g, "/100")
           .replace(/x/g, "*")
@@ -80,16 +111,25 @@ const calculate = () => {
 
         result = eval(operation);
 
-     
-        if (result === undefined || result === Infinity || result === -Infinity) {
+       
+        if (result === undefined || result === Infinity || result === -Infinity || isNaN(result)) {
           result = "Error";
+          isError = true; 
+        } else {
+          isError = false; // Resetea el estado de error si la operación se ha podido hacer
         }
       } catch (error) {
         result = "Error";
+        isError = true; 
       }
     }
 
-  
+    
     screen.value = result;
   }
 };
+
+document.getElementById("screen").addEventListener('keypress', (e) => {
+  e.preventDefault();
+});
+
